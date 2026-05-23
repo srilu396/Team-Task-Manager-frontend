@@ -37,9 +37,9 @@ const Tasks = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [filters]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (showLoadingIndicator = true) => {
     try {
-      setLoading(true);
+      if (showLoadingIndicator) setLoading(true);
       // Clean empty filters
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== '')
@@ -237,7 +237,7 @@ const Tasks = () => {
         task={selectedTask}
         project={selectedTask ? projects.find(p => p._id === selectedTask.project._id) : null}
         isNew={false}
-        onTaskUpdated={fetchTasks}
+        onTaskUpdated={() => fetchTasks(false)}
       />
     </div>
   );

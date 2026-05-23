@@ -272,6 +272,9 @@ const Login = () => {
                   {loading ? 'Logging in...' : 'Login'}
                 </button>
               </div>
+              <p className="text-xs text-center text-gray-400 mt-2">
+                Note: Initial login may take up to 50 seconds as our free backend server spins up. Please be patient.
+              </p>
             </form>
 
             <div className="mt-6 text-center text-sm text-gray-600 font-medium">

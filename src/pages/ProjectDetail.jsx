@@ -54,9 +54,9 @@ const ProjectDetail = () => {
     }
   }, [location.search, tasks]);
 
-  const fetchProjectData = async () => {
+  const fetchProjectData = async (showLoadingIndicator = true) => {
     try {
-      setLoading(true);
+      if (showLoadingIndicator) setLoading(true);
       const data = await projectService.getProjectById(id);
       setProject(data.project);
       setTasks(data.tasks);
@@ -341,7 +341,7 @@ const ProjectDetail = () => {
         project={project}
         isNew={isNewTask}
         initialStatus={initialTaskStatus}
-        onTaskUpdated={fetchProjectData}
+        onTaskUpdated={() => fetchProjectData(false)}
       />
 
       <CustomStatusManager
