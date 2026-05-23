@@ -21,7 +21,7 @@ const Dashboard = () => {
   const getImageUrl = (path) => {
     if (!path) return '';
     if (path.startsWith('http') || path.startsWith('data:')) return path;
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://team-task-manager-0wk0.onrender.com/api';
     const baseUrl = apiUrl.replace(/\/api\/?$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${baseUrl}${cleanPath}`;

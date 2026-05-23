@@ -33,7 +33,7 @@ export const NotificationProvider = ({ children }) => {
 
     fetchNotifications();
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://team-task-manager-0wk0.onrender.com/api';
     const socketUrl = apiUrl.replace(/\/api\/?$/, '');
     const newSocket = io(socketUrl);
     setSocket(newSocket);
