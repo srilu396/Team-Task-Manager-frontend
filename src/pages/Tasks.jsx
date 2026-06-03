@@ -99,11 +99,19 @@ const Tasks = () => {
     return <Badge color={colors[status] || 'gray'}>{labels[status] || status}</Badge>;
   };
 
+  // Group by project
+  const groupedTasks = tasks.reduce((acc, task) => {
+    const pName = task.project?.name || 'Unassigned Project';
+    if (!acc[pName]) acc[pName] = [];
+    acc[pName].push(task);
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Tasks</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
           <p className="text-gray-500 mt-1">View and filter across all projects</p>
         </div>
       </div>
@@ -150,86 +158,109 @@ const Tasks = () => {
         </select>
       </div>
 
-      {/* Task List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500">
-                <th className="px-6 py-4">Title</th>
-                <th className="px-6 py-4">Project</th>
-                <th className="px-6 py-4">Assignee</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Priority</th>
-                <th className="px-6 py-4 text-right">Due Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
+      {/* Task List grouped by Project */}
+      {loading ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500">
+                  <th className="px-6 py-4">Title</th>
+                  <th className="px-6 py-4">Assignee</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Priority</th>
+                  <th className="px-6 py-4 text-right">Due Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
                     <td className="px-6 py-4"><Skeleton className="h-5 w-48" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-5 w-24" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-8 w-8 rounded-full" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-6 w-16 rounded-full" /></td>
                     <td className="px-6 py-4 text-right"><Skeleton className="h-5 w-20 ml-auto" /></td>
                   </tr>
-                ))
-              ) : tasks.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                    No tasks found matching your filters.
-                  </td>
-                </tr>
-              ) : (
-                tasks.map(task => (
-                  <tr 
-                    key={task._id} 
-                    onClick={() => handleTaskClick(task)}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-6 py-4 font-medium text-gray-900 max-w-xs truncate" title={task.title}>
-                      {task.title}
-                    </td>
-                    <td className="px-6 py-4 text-gray-500">
-                      {task.project?.name}
-                    </td>
-                    <td className="px-6 py-4">
-                      {task.assignedTo ? (
-                        <div className="flex items-center gap-2" title={task.assignedTo.fullName}>
-                          <Avatar name={task.assignedTo.fullName} src={task.assignedTo.profileImage || task.assignedTo.avatar} size="sm" />
-                          <span className="text-sm text-gray-700 hidden lg:inline">{task.assignedTo.fullName}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(task)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge color={
-                        task.priority === 'high' ? 'red' : 
-                        task.priority === 'medium' ? 'blue' : 'gray'
-                      }>
-                        {task.priority}
-                      </Badge>
-                    </td>
-                    <td className={`px-6 py-4 text-right text-sm ${
-                      task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done'
-                        ? 'text-red-500 font-medium'
-                        : 'text-gray-500'
-                    }`}>
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : tasks.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+          No tasks found matching your filters.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.keys(groupedTasks).map(projectName => (
+            <div key={projectName} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden shadow-md">
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></span>
+                  {projectName}
+                </h2>
+                <span className="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full">
+                  {groupedTasks[projectName].length} {groupedTasks[projectName].length === 1 ? 'task' : 'tasks'}
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 w-1/3">Title</th>
+                      <th className="px-6 py-3">Assignee</th>
+                      <th className="px-6 py-3">Status</th>
+                      <th className="px-6 py-3">Priority</th>
+                      <th className="px-6 py-3 text-right">Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {groupedTasks[projectName].map(task => (
+                      <tr 
+                        key={task._id} 
+                        onClick={() => handleTaskClick(task)}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <td className="px-6 py-4 font-semibold text-gray-900 max-w-xs truncate" title={task.title}>
+                          {task.title}
+                        </td>
+                        <td className="px-6 py-4">
+                          {task.assignedTo ? (
+                            <div className="flex items-center gap-2" title={task.assignedTo.fullName}>
+                              <Avatar name={task.assignedTo.fullName} src={task.assignedTo.profileImage || task.assignedTo.avatar} size="sm" />
+                              <span className="text-sm text-gray-700 hidden lg:inline">{task.assignedTo.fullName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {getStatusBadge(task)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge color={
+                            task.priority === 'high' ? 'red' : 
+                            task.priority === 'medium' ? 'blue' : 'gray'
+                          }>
+                            {task.priority}
+                          </Badge>
+                        </td>
+                        <td className={`px-6 py-4 text-right text-sm ${
+                          task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done'
+                            ? 'text-red-500 font-medium'
+                            : 'text-gray-500'
+                        }`}>
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <TaskModal
         isOpen={isTaskModalOpen}
