@@ -1,9 +1,12 @@
-import React, { useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import Avatar from '../components/ui/Avatar';
+import DeleteAccountModal from '../components/ui/DeleteAccountModal';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 
 const Settings = () => {
   const { user } = useContext(AuthContext);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -67,6 +70,38 @@ const Settings = () => {
           <p className="mt-2 text-xs text-right text-gray-400">Editing profile details will be available in a future update.</p>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <div className="bg-red-50/50 rounded-xl shadow-sm border border-red-200/70 overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={20} className="text-red-600" />
+            <h2 className="text-lg font-bold text-red-900">Danger Zone</h2>
+          </div>
+          <p className="text-sm text-red-700 mb-5">
+            Once you delete your account, there is no going back. All of your personal profile data, created content, and associations will be permanently removed.
+          </p>
+
+          <div className="flex items-center justify-between pt-4 border-t border-red-200/60">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Delete Account</p>
+              <p className="text-xs text-gray-500">Permanently delete your TaskNova account and all associated data</p>
+            </div>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-red-500/20 flex items-center gap-2"
+            >
+              <Trash2 size={16} />
+              Delete My Account
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 };

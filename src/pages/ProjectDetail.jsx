@@ -214,8 +214,16 @@ const ProjectDetail = () => {
         {activeTab === 'board' && (
           <KanbanBoard 
             tasks={tasks} 
+            project={project}
             onTaskClick={handleTaskClick} 
             onAddTask={handleAddTask} 
+            onTaskUpdated={(updatedTask) => {
+              if (updatedTask && updatedTask._id) {
+                setTasks(prev => prev.map(t => t._id === updatedTask._id ? { ...t, ...updatedTask } : t));
+              } else {
+                fetchProjectData(false);
+              }
+            }}
           />
         )}
 
@@ -336,12 +344,27 @@ const ProjectDetail = () => {
 
       <TaskModal
         isOpen={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedTask(null);
+        }}
         task={selectedTask}
         project={project}
         isNew={isNewTask}
         initialStatus={initialTaskStatus}
-        onTaskUpdated={() => fetchProjectData(false)}
+        onTaskUpdated={(updatedTask) => {
+          if (updatedTask && updatedTask._id) {
+            setTasks(prev => {
+              const exists = prev.some(t => t._id === updatedTask._id);
+              if (exists) {
+                return prev.map(t => t._id === updatedTask._id ? { ...t, ...updatedTask } : t);
+              }
+              return [updatedTask, ...prev];
+            });
+          } else {
+            fetchProjectData(false);
+          }
+        }}
       />
 
       <CustomStatusManager

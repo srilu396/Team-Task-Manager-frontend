@@ -66,17 +66,20 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     try {
+      let savedTask;
+      const targetProjectId = project?._id || (typeof task?.project === 'object' ? task.project?._id : task?.project);
       if (isNew) {
-        await taskService.createTask({ ...formData, project: project._id });
+        savedTask = await taskService.createTask({ ...formData, project: targetProjectId });
         showToast('Task created successfully', 'success');
       } else {
-        await taskService.updateTask(task._id, formData);
+        savedTask = await taskService.updateTask(task._id, formData);
         showToast('Task updated successfully', 'success');
       }
-      onTaskUpdated();
-      onClose();
+      if (onTaskUpdated) onTaskUpdated(savedTask);
+      if (onClose) onClose();
     } catch (error) {
       showToast(error.response?.data?.message || 'Failed to save task', 'error');
     } finally {
@@ -168,6 +171,7 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
                       <option value="todo">To Do</option>
                       <option value="in_progress">In Progress</option>
                       <option value="review">Review</option>
+                      <option value="testing">Testing</option>
                       <option value="done">Done</option>
                     </>
                   )}

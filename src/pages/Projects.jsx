@@ -112,8 +112,9 @@ const Projects = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredProjects.map(project => {
-                  const pct = project.progress || 0; // assuming progress might be calculated elsewhere or not available, fallback to 0
+                  const pct = project.totalTasks > 0 ? Math.round((project.completedTasks / project.totalTasks) * 100) : (project.progress || 0);
                   return (
+
                     <tr key={project._id} className="hover:bg-gray-50 cursor-pointer transition-colors group" onClick={() => navigate(`/projects/${project._id}`)}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">

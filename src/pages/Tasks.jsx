@@ -44,11 +44,8 @@ const Tasks = () => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== '')
       );
-      // Force fetching only my tasks if not admin
-      if (user?.role !== 'admin' && (user?.id || user?._id)) {
-        cleanFilters.assignedTo = user.id || user._id;
-      }
       const data = await taskService.getTasks(cleanFilters);
+
       setTasks(data);
     } catch (error) {
       showToast('Failed to fetch tasks', 'error');
@@ -88,12 +85,14 @@ const Tasks = () => {
       todo: 'gray',
       in_progress: 'blue',
       review: 'yellow',
+      testing: 'purple',
       done: 'green'
     };
     const labels = {
       todo: 'To Do',
       in_progress: 'In Progress',
       review: 'Review',
+      testing: 'Testing',
       done: 'Done'
     };
     return <Badge color={colors[status] || 'gray'}>{labels[status] || status}</Badge>;
@@ -142,6 +141,7 @@ const Tasks = () => {
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
           <option value="review">Review</option>
+          <option value="testing">Testing</option>
           <option value="done">Done</option>
         </select>
         
@@ -264,11 +264,20 @@ const Tasks = () => {
 
       <TaskModal
         isOpen={isTaskModalOpen}
-        onClose={() => setIsTaskModalOpen(false)}
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedTask(null);
+        }}
         task={selectedTask}
-        project={selectedTask ? projects.find(p => p._id === selectedTask.project._id) : null}
+        project={selectedTask ? (typeof selectedTask.project === 'object' ? selectedTask.project : projects.find(p => p._id === selectedTask.project)) : null}
         isNew={false}
-        onTaskUpdated={() => fetchTasks(false)}
+        onTaskUpdated={(updatedTask) => {
+          if (updatedTask && updatedTask._id) {
+            setTasks(prev => prev.map(t => t._id === updatedTask._id ? { ...t, ...updatedTask } : t));
+          } else {
+            fetchTasks(false);
+          }
+        }}
       />
     </div>
   );

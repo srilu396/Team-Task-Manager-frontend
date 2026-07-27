@@ -3,6 +3,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { ToastContext } from '../../context/ToastContext';
 import { X } from 'lucide-react';
 import api from '../../services/api';
+import DeleteAccountModal from './DeleteAccountModal';
 
 const ProfileImageUpload = () => {
   const fileInputRef = useRef(null);
@@ -191,6 +192,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -249,6 +251,22 @@ const ProfileModal = ({ isOpen, onClose }) => {
             {loading ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
+
+        <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+          <span className="text-xs text-gray-500 font-medium">Danger Zone</span>
+          <button
+            type="button"
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline"
+          >
+            Delete Account
+          </button>
+        </div>
+
+        <DeleteAccountModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+        />
       </div>
     </div>
   );

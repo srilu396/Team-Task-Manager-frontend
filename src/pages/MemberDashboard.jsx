@@ -8,6 +8,7 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import { UserCheck, Clock, CheckCircle, AlertCircle, Calendar, ChevronDown, ChevronRight, MessageSquare, FolderKanban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import TaskModal from '../components/tasks/TaskModal';
 
 const MemberDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -62,6 +63,8 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
   const [tasks, setTasks] = useState([]);
   const [activeTab, setActiveTab] = useState('All');
   const [expandedTasks, setExpandedTasks] = useState({});
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const { showToast } = useContext(ToastContext);
   const navigate = useNavigate();
 
@@ -83,19 +86,29 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
     if (tab === 'In Progress') return tasks.filter(t => t.status === 'in_progress').length;
     if (tab === 'Todo') return tasks.filter(t => t.status === 'todo').length;
     if (tab === 'Review') return tasks.filter(t => t.status === 'review').length;
+    if (tab === 'Testing') return tasks.filter(t => t.status === 'testing').length;
     if (tab === 'Done') return tasks.filter(t => t.status === 'done').length;
     return 0;
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
+    const originalTasks = [...tasks];
+    // Immediate local update
+    setTasks(prev => prev.map(t => t._id === taskId ? { ...t, status: newStatus } : t));
     try {
       await taskService.updateTask(taskId, { status: newStatus });
-      showToast('Status updated successfully', 'success');
-      loadTasks();
+      const statusLabels = { todo: 'Todo', in_progress: 'In Progress', review: 'Review', testing: 'Testing', done: 'Done' };
+      showToast(`Status updated to ${statusLabels[newStatus] || newStatus}`, 'success');
       fetchStats();
     } catch (err) {
+      setTasks(originalTasks);
       showToast('Failed to update status', 'error');
     }
+  };
+
+  const handleTaskClick = (task) => {
+    setSelectedTask(task);
+    setIsTaskModalOpen(true);
   };
 
   const toggleTaskExpand = (taskId) => {
@@ -278,7 +291,7 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
             </div>
             
             <div className="flex overflow-x-auto scrollbar-none border-b border-gray-200 mb-4 whitespace-nowrap">
-              {['All', 'In Progress', 'Todo', 'Review', 'Done'].map(tab => (
+              {['All', 'In Progress', 'Todo', 'Review', 'Testing', 'Done'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -312,13 +325,19 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                       {groupedTasks[project].map(task => (
                         <div key={task._id} className="bg-white">
                           <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => toggleTaskExpand(task._id)}>
-                              <button className="mt-1 text-gray-400 hover:text-gray-600 shrink-0">
+                            <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => handleTaskClick(task)}>
+                              <button 
+                                className="mt-1 text-gray-400 hover:text-gray-600 shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleTaskExpand(task._id);
+                                }}
+                              >
                                 {expandedTasks[task._id] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                               </button>
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                                  <span className="font-semibold text-[14px] text-gray-900 truncate max-w-[200px] sm:max-w-none">{task.title}</span>
+                                  <span className="font-semibold text-[14px] text-gray-900 truncate max-w-[200px] sm:max-w-none hover:text-indigo-600 transition-colors">{task.title}</span>
                                   <Badge color={task.priority}>{task.priority}</Badge>
                                 </div>
                                 <div className="text-[13px] text-gray-500 flex flex-wrap items-center gap-3">
@@ -334,7 +353,7 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-3 ml-0 sm:ml-4 w-full sm:w-auto justify-end shrink-0">
+                            <div className="flex items-center gap-3 ml-0 sm:ml-4 w-full sm:w-auto justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
                               <select 
                                 value={task.status}
                                 onChange={(e) => handleStatusChange(task._id, e.target.value)}
@@ -343,6 +362,7 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                                 <option value="todo">Todo</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="review">Review</option>
+                                <option value="testing">Testing</option>
                                 <option value="done">Done</option>
                               </select>
                             </div>
@@ -352,9 +372,14 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                           {expandedTasks[task._id] && (
                             <div className="px-11 pb-4 pt-1 bg-gray-50 border-t border-gray-100 text-[13px] text-gray-600">
                               <p className="mb-3 whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
-                              <button onClick={() => navigate(`/projects/${task.project?._id}?task=${task._id}`)} className="text-blue-600 font-medium hover:underline">
-                                Open Full Task →
-                              </button>
+                              <div className="flex items-center gap-4">
+                                <button onClick={() => handleTaskClick(task)} className="text-indigo-600 font-medium hover:underline">
+                                  Open Task Details Modal →
+                                </button>
+                                <button onClick={() => navigate(`/projects/${task.project?._id}?task=${task._id}`)} className="text-gray-500 text-xs hover:underline">
+                                  View in Project Board
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -433,6 +458,25 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
 
         </div>
       </div>
+
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedTask(null);
+        }}
+        task={selectedTask}
+        project={selectedTask?.project}
+        isNew={false}
+        onTaskUpdated={(updatedTask) => {
+          if (updatedTask && updatedTask._id) {
+            setTasks(prev => prev.map(t => t._id === updatedTask._id ? { ...t, ...updatedTask } : t));
+          } else {
+            loadTasks();
+          }
+          fetchStats();
+        }}
+      />
     </div>
   );
 };
