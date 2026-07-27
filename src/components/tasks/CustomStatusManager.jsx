@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import projectService from '../../services/project.service';
+import CustomSelect from '../ui/CustomSelect';
 
 const CustomStatusManager = ({ isOpen, onClose, project, onStatusesUpdated, showToast }) => {
   const colorOptions = [
@@ -119,17 +120,20 @@ const CustomStatusManager = ({ isOpen, onClose, project, onStatusesUpdated, show
                 <span className="font-semibold text-[14px] text-gray-900">{status.name}</span>
               </div>
               <div className="flex items-center gap-3">
-                <select
-                  value={status.color}
-                  onChange={(e) => handleColorChange(index, e.target.value)}
-                  className="text-[13px] border border-gray-200 rounded-lg shadow-sm py-1 px-2 font-medium bg-white"
-                >
-                  {colorOptions.map(opt => (
-                    <option key={opt.color} value={opt.color}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-32">
+                  <CustomSelect
+                    options={colorOptions.map(c => ({ value: c.color, label: c.label, color: c.color }))}
+                    value={status.color}
+                    onChange={(val) => handleColorChange(index, val)}
+                    buttonClassName="py-1 px-2 text-xs bg-white border-gray-200"
+                    renderOption={(opt) => (
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: opt.color }} />
+                        <span className="text-xs">{opt.label}</span>
+                      </div>
+                    )}
+                  />
+                </div>
 
                 {!['todo', 'done'].includes(status.name.toLowerCase()) && (
                   <button 
@@ -157,17 +161,20 @@ const CustomStatusManager = ({ isOpen, onClose, project, onStatusesUpdated, show
               placeholder="e.g. Testing, Blocked"
               className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
             />
-            <select
-              value={selectedColorIdx}
-              onChange={(e) => setSelectedColorIdx(parseInt(e.target.value))}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm"
-            >
-              {colorOptions.map((opt, idx) => (
-                <option key={opt.color} value={idx}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="w-36">
+              <CustomSelect
+                options={colorOptions.map((c, idx) => ({ value: idx, label: c.label, color: c.color }))}
+                value={selectedColorIdx}
+                onChange={(val) => setSelectedColorIdx(typeof val === 'number' ? val : parseInt(val))}
+                buttonClassName="py-1.5 px-2.5 text-xs bg-white border-gray-200"
+                renderOption={(opt) => (
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: opt.color }} />
+                    <span className="text-xs">{opt.label}</span>
+                  </div>
+                )}
+              />
+            </div>
             <button
               onClick={handleAddStatus}
               className="bg-primary hover:bg-primary-hover text-white px-4 py-1.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5"

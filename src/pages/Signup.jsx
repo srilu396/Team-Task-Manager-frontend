@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ToastContext } from '../context/ToastContext';
+import CustomSelect from '../components/ui/CustomSelect';
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -285,20 +286,15 @@ const Signup = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
-                <div className="relative">
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg py-2.5 px-3.5 text-gray-700 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
-                  >
-                    <option value="Admin">Admin</option>
-                    <option value="Member">Member</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
+                <CustomSelect
+                  options={[
+                    { value: 'Admin', label: 'Admin (Create workspace)' },
+                    { value: 'Member', label: 'Member (Join with team code)' },
+                  ]}
+                  value={formData.role}
+                  onChange={(val) => setFormData((prev) => ({ ...prev, role: val }))}
+                  buttonClassName="py-2.5 bg-gray-50 border-gray-200"
+                />
               </div>
 
               {formData.role === 'Member' && (

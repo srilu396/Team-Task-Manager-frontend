@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Avatar = ({ name, src, size = 'md', className = '', style = {} }) => {
+  const [imgError, setImgError] = useState(false);
+
   const getInitials = (name) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -8,7 +10,11 @@ const Avatar = ({ name, src, size = 'md', className = '', style = {} }) => {
 
   const getColor = (name) => {
     if (!name) return 'bg-gray-400';
-    const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500', 'bg-red-500', 'bg-orange-500', 'bg-green-500', 'bg-teal-500'];
+    const colors = [
+      'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 
+      'bg-pink-500', 'bg-red-500', 'bg-orange-500', 
+      'bg-green-500', 'bg-teal-500'
+    ];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -24,7 +30,7 @@ const Avatar = ({ name, src, size = 'md', className = '', style = {} }) => {
     xl: 'w-16 h-16 text-lg'
   };
 
-  const hasImage = src && src !== 'null' && src !== 'undefined' && src !== '';
+  const hasImage = src && src !== 'null' && src !== 'undefined' && src !== '' && !imgError;
   
   let imgUrl = null;
   if (hasImage) {
@@ -40,25 +46,16 @@ const Avatar = ({ name, src, size = 'md', className = '', style = {} }) => {
 
   return (
     <div 
-      className={`flex items-center justify-center rounded-full text-white font-medium overflow-hidden shrink-0 ${!hasImage ? getColor(name) : 'bg-gray-100'} ${sizes[size] || sizes.md} ${className}`}
+      className={`flex items-center justify-center rounded-full text-white font-medium overflow-hidden shrink-0 transition-transform ${!hasImage ? getColor(name) : 'bg-gray-100'} ${sizes[size] || sizes.md} ${className}`}
       style={style}
     >
       {hasImage ? (
         <img 
           src={imgUrl} 
-          alt={name} 
+          alt={name || 'Avatar'} 
+          loading="lazy"
           className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.style.display = 'none';
-            // Trigger a fallback by resetting display and showing initials if possible
-            const parent = e.target.parentNode;
-            if (parent) {
-              parent.className = parent.className.replace('bg-gray-100', getColor(name));
-              const initialsSpan = document.createElement('span');
-              initialsSpan.innerText = getInitials(name);
-              parent.appendChild(initialsSpan);
-            }
-          }}
+          onError={() => setImgError(true)}
         />
       ) : (
         getInitials(name)
@@ -68,4 +65,3 @@ const Avatar = ({ name, src, size = 'md', className = '', style = {} }) => {
 };
 
 export default Avatar;
-
